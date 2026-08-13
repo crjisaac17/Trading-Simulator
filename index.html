@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>15-Minute Live Single-Stock Trading Simulator</title>
+  <meta name="description" content="Real-time 15-minute single-stock trading simulator featuring per-second price ticks, unbiased market news events, real-time instructor monitoring, and student P&L reporting.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- PAGE 1 & 2: 2-STEP ONBOARDING SCREEN -->
+  <div id="onboardingScreen" class="onboarding-container">
+    
+    <!-- STEP 1: TRADER REGISTRATION FORM -->
+    <div id="onboardingStep1" class="onboarding-card">
+      <div class="brand-logo" style="justify-content: center; font-size: 22px; margin-bottom: 4px;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+          <polyline points="16 7 22 7 22 13"></polyline>
+        </svg>
+        15-Minute Live Trading Simulator
+      </div>
+
+      <p class="onboarding-desc">
+        Step 1 of 2: Register your Trader Name and ID Number to enter the evaluation portal.
+      </p>
+
+      <form id="step1Form" style="display:flex; flex-direction:column; gap:14px; margin-top: 10px;">
+        <div class="input-field-group">
+          <label class="input-label" for="inputTraderName">Trader Full Name</label>
+          <input type="text" id="inputTraderName" class="custom-input" placeholder="e.g. Isaac Chang" required autocomplete="off">
+        </div>
+
+        <div class="input-field-group">
+          <label class="input-label" for="inputTraderID">Student / Trader ID Number</label>
+          <input type="text" id="inputTraderID" class="custom-input" placeholder="e.g. STU-884920" required autocomplete="off">
+        </div>
+
+        <button type="submit" class="btn-buy" style="width:100%; margin-top:8px; padding:14px; font-size:15px;">
+          NEXT: READ CASE STUDY BRIEFING ➔
+        </button>
+      </form>
+    </div>
+
+    <!-- STEP 2: CASE STUDY BRIEFING & MANDATORY AGREEMENT -->
+    <div id="onboardingStep2" class="onboarding-card" style="display:none; width:560px;">
+      <div class="modal-title" style="text-align:center; font-size:18px; color:var(--blue);">
+        📖 STEP 2: CASE STUDY BRIEFING & SIMULATION RULES
+      </div>
+
+      <div class="rules-box" style="max-height:360px; overflow-y:auto; line-height:1.5;">
+        <h4 style="color:var(--yellow); font-size:14px;">1. Target Asset Profile: NovaChip Technologies (NCT)</h4>
+        <p style="color:var(--text-muted); font-size:12px; margin-bottom:8px;">
+          <strong>NovaChip Technologies (NCT)</strong> is a leading designer of next-generation AI semiconductors and server hardware (Starting Price: <strong>$80.00</strong>). The stock operates in a highly dynamic, news-sensitive technology sector.
+        </p>
+
+        <h4 style="color:var(--yellow); font-size:14px;">2. Simulation Mechanics & 15-Minute Timeline</h4>
+        <p style="color:var(--text-muted); font-size:12px; margin-bottom:8px;">
+          The trading evaluation runs for exactly <strong>15 minutes (900 seconds)</strong>. Stock prices update in real-time every <strong>1 second</strong>. You start with <strong>$100,000 in virtual cash</strong> to execute Buy and Sell orders.
+        </p>
+
+        <h4 style="color:var(--yellow); font-size:14px;">3. Unbiased Market Events & Supply/Demand Analysis</h4>
+        <p style="color:var(--text-muted); font-size:12px; margin-bottom:8px;">
+          Throughout the 15 minutes, live market event announcements will hit the news stream. <strong>Events will NOT indicate whether they are positive or negative.</strong> You must apply critical thinking to analyze each announcement: determine how it shifts supply and demand, evaluate whether it will push prices up or down, and trade strategically!
+        </p>
+
+        <h4 style="color:var(--yellow); font-size:14px;">4. Real-Time Performance & Instructor Monitoring</h4>
+        <p style="color:var(--text-muted); font-size:12px;">
+          All trades and P&L metrics are monitored in real time by the instructor backend. At 00:00, your session completes and generates a formal Performance Certificate.
+        </p>
+      </div>
+
+      <!-- Mandatory Agreement Checkbox -->
+      <div class="checkbox-agreement-box">
+        <input type="checkbox" id="chkAgreeRules">
+        <label for="chkAgreeRules">
+          I have read and understood the case study briefing, stock profile, and simulation rules.
+        </label>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button type="button" class="btn-toggle" id="btnBackToStep1">← Back</button>
+        <button type="button" class="btn-buy" id="btnStartSimulation" disabled style="flex:1; opacity:0.5; padding:12px; font-size:14px;">
+          START 15-MINUTE SIMULATION ➔
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MAIN TRADING SIMULATOR VIEW -->
+  <div id="mainSimulatorView" class="simulator-wrapper" style="display:none;">
+
+    <!-- Top Navigation Bar -->
+    <header class="top-navbar">
+      <div class="brand-section">
+        <div class="brand-logo">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+            <polyline points="16 7 22 7 22 13"></polyline>
+          </svg>
+          15-Minute Live Trading Evaluation
+        </div>
+      </div>
+
+      <!-- Active User & Session Control -->
+      <div class="header-controls">
+        <div class="user-badge" id="userDisplayName">
+          Trader Profile
+        </div>
+        <a href="admin.html" target="_blank" class="btn-toggle" style="text-decoration:none;">Instructor Monitor ↗</a>
+        <button class="btn-toggle" id="btnSwitchUser">👤 Switch User / Logout</button>
+      </div>
+    </header>
+
+    <!-- 15-Minute Countdown Banner -->
+    <section class="case-study-banner">
+      <div class="banner-left">
+        <div class="timer-clock-box">
+          <span class="timer-label">SESSION TIME REMAINING</span>
+          <div class="timer-clock" id="timerDisplay">15:00</div>
+        </div>
+        <div style="flex:1;">
+          <h2 class="banner-title">Live Stock: NovaChip Technologies (NCT)</h2>
+          <p class="banner-desc">Per-second price ticks driven by unbiased market news supply & demand events. Analyze events critically and trade strategically!</p>
+          <div class="timer-progress-track">
+            <div class="timer-progress-bar" id="timerProgressBar" style="width:0%;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Application Workspace -->
+    <main class="main-app-container">
+
+      <!-- Left Chart Workspace -->
+      <section class="chart-workspace">
+        <div class="stock-header-strip">
+          <div>
+            <h3 style="font-size:20px;">NCT <span style="font-size:13px; color:var(--blue); font-weight:600;">NovaChip Technologies</span></h3>
+            <div style="font-size:11px; color:var(--text-muted);">Sector: AI Semiconductors & Hardware</div>
+          </div>
+          <div style="text-align:right;">
+            <div class="stat-value" style="font-size:26px; font-family:'JetBrains Mono', monospace;" id="liveStockPrice">$80.00</div>
+            <div class="stat-value up" style="font-size:13px;" id="liveStockChange">+0.00%</div>
+          </div>
+        </div>
+
+        <div class="chart-toolbar">
+          <div class="toolbar-group">
+            <span style="font-size:11px; color:var(--text-muted);">Live Tick Feed: 1Hz (Every 1s)</span>
+          </div>
+          <div class="toolbar-group">
+            <span style="font-size:11px; color:var(--text-muted);">Indicators:</span>
+            <button class="indicator-pill active" data-ind="ema20">EMA 20</button>
+            <button class="indicator-pill active" data-ind="ema50">EMA 50</button>
+            <button class="indicator-pill active" data-ind="rsi">RSI (14)</button>
+          </div>
+        </div>
+
+        <div class="canvas-container" style="flex:1; width:100%; height:100%; position:relative;">
+          <canvas id="priceChart"></canvas>
+        </div>
+      </section>
+
+      <!-- Right Sidebar (Order Ticket & Live Unbiased Event Stream) -->
+      <aside class="right-sidebar">
+        <div class="sidebar-tab-header">
+          <div class="sidebar-tab active">Instant Trade Execution</div>
+        </div>
+
+        <!-- Trade Ticket Form -->
+        <div class="order-ticket-container">
+          <div class="input-field-group">
+            <label class="input-label" for="tradeQtyInput">
+              Number of Shares to Trade
+            </label>
+            <input type="number" id="tradeQtyInput" class="custom-input" value="100" min="1" step="10">
+          </div>
+
+          <div class="cost-preview-box">
+            <span>Estimated Total Cost:</span>
+            <strong id="tradeCostPreview" style="font-family:'JetBrains Mono', monospace;">$8,000.00</strong>
+          </div>
+
+          <div class="execution-buttons">
+            <button class="btn-buy" id="btnBuyShares">
+              BUY SHARES
+              <span class="btn-subtext">Instant Execution</span>
+            </button>
+            <button class="btn-sell" id="btnSellShares">
+              SELL SHARES
+              <span class="btn-subtext">Instant Execution</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Real-Time Unbiased Market Events Stream -->
+        <div class="depth-tape-split">
+          <div class="sidebar-tab-header">
+            <div class="sidebar-tab active">⚡ Live Unbiased Market Events</div>
+          </div>
+          <div class="news-feed" id="marketEventFeed" style="padding:10px;">
+            <div class="news-card">
+              <div>
+                <div class="news-title">⚡ 15-Minute Trading Session Started</div>
+                <div style="font-size:11px; margin-top:2px; color:var(--text-muted);">Market open. Monitor live news announcements for supply and demand impacts.</div>
+              </div>
+              <span class="indicator-pill active">LIVE</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Bottom Dock (Portfolio & P&L Tracker) -->
+      <section class="bottom-dock">
+        <div class="dock-header">
+          <div class="dock-tabs">
+            <div class="dock-tab active">Portfolio P&L Dashboard</div>
+          </div>
+
+          <div class="account-summary-strip">
+            <div class="acc-stat"><span>Cash Balance:</span> <strong id="valCash">$100,000.00</strong></div>
+            <div class="acc-stat"><span>Shares Owned:</span> <strong id="valShares">0 shares</strong></div>
+            <div class="acc-stat"><span>Avg Buy Price:</span> <strong id="valAvgPrice">-</strong></div>
+            <div class="acc-stat"><span>Stock Value:</span> <strong id="valStockVal">$0.00</strong></div>
+            <div class="acc-stat"><span>Total Equity:</span> <strong id="valEquity">$100,000.00</strong></div>
+            <div class="acc-stat"><span>Total P&L:</span> <strong id="valTotalPnL" class="stat-value up">$0.00 (0.00%)</strong></div>
+          </div>
+        </div>
+
+        <div class="dock-content">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Time (Sim Elapsed)</th>
+                <th>Order Type</th>
+                <th>Quantity</th>
+                <th>Execution Price</th>
+                <th>Total Cost</th>
+              </tr>
+            </thead>
+            <tbody id="tradeHistoryTableBody">
+              <tr><td colspan="5" style="text-align:center; color: var(--text-muted);">No trades executed yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- End of 15-Minute Session Report Certificate Modal -->
+  <div class="modal-overlay hidden" id="reportModal">
+    <div class="modal-card" style="width:520px;">
+      <div class="modal-title">🏆 15-MINUTE SESSION COMPLETED</div>
+      
+      <div class="report-certificate-box">
+        <div style="font-size:12px; color:var(--text-muted);">Performance Certificate For:</div>
+        <h3 id="rptTraderName" style="font-size:22px; color:var(--text-main); margin-top:4px;">Trader Name</h3>
+        <div style="font-size:13px; color:var(--blue);" id="rptTraderID">ID: STU-884920</div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px; padding:14px; background:rgba(0,0,0,0.4); border-radius:8px;">
+          <div>
+            <span class="stat-label">Final Portfolio Equity</span>
+            <div id="rptFinalEquity" style="font-size:20px; font-weight:800; font-family:'JetBrains Mono', monospace;">$100,000.00</div>
+          </div>
+          <div>
+            <span class="stat-label">Total Return %</span>
+            <div id="rptTotalReturn" class="stat-value up" style="font-size:20px; font-weight:800;">+0.00%</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; gap:10px; margin-top:10px;">
+        <button class="btn-toggle" id="btnExportReport">📥 Export CSV Performance Report</button>
+        <button class="btn-toggle active" id="btnRestartSim">🔄 Start New 15-Min Session</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Scripts (Loaded in dependency order) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="src/services/supabase.js"></script>
+  <script src="src/services/participantService.js"></script>
+  <script src="src/services/attemptService.js"></script>
+  <script src="src/services/tradeService.js"></script>
+  <script src="src/services/snapshotService.js"></script>
+  <script src="audio.js"></script>
+  <script src="chartEngine.js"></script>
+  <script src="simulator.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
