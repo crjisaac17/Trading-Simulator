@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instructor Admin - Real-Time Trade Monitor</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { overflow-y: auto; }
+    .admin-container {
+      padding: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .admin-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    .admin-stat-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      padding: 16px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .admin-split {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+    .admin-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .admin-panel-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--yellow);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="top-navbar">
+    <div class="brand-section">
+      <div class="brand-logo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        Instructor Live Trade Monitor
+      </div>
+    </div>
+    <div class="header-controls">
+      <span class="user-badge" style="border-color:var(--yellow); color:var(--yellow);">● REAL-TIME BACKEND ACTIVE</span>
+      <a href="index.html" class="btn-toggle" style="text-decoration:none;">Open Student Simulator ↗</a>
+    </div>
+  </header>
+
+  <main class="admin-container">
+
+    <!-- Top Admin Stats -->
+    <div class="admin-stats-grid">
+      <div class="admin-stat-card">
+        <span class="stat-label">Active Participants</span>
+        <div id="statActiveCount" style="font-size:24px; font-weight:800; color:var(--blue);">0</div>
+      </div>
+      <div class="admin-stat-card">
+        <span class="stat-label">Class Average Equity</span>
+        <div id="statAvgEquity" style="font-size:24px; font-weight:800; font-family:'JetBrains Mono', monospace;">$100,000.00</div>
+      </div>
+      <div class="admin-stat-card">
+        <span class="stat-label">Class Average Return</span>
+        <div id="statAvgReturn" class="stat-value up" style="font-size:24px; font-weight:800;">+0.00%</div>
+      </div>
+      <div class="admin-stat-card">
+        <span class="stat-label">Total Trades Recorded</span>
+        <div id="statTotalTrades" style="font-size:24px; font-weight:800; color:var(--yellow);">0</div>
+      </div>
+    </div>
+
+    <!-- Admin Main Content Split -->
+    <div class="admin-split">
+
+      <!-- Left: Participants Leaderboard Table -->
+      <div class="admin-panel">
+        <div class="admin-panel-title">
+          <span>👥 Connected Participants (Real-Time Leaderboard)</span>
+          <span style="font-size:11px; color:var(--text-muted);">Auto-refreshes every 2s</span>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Trader Name</th>
+              <th>Student ID</th>
+              <th>Cash Balance</th>
+              <th>Shares Owned</th>
+              <th>Live Equity</th>
+              <th>Return %</th>
+              <th>Last Active</th>
+            </tr>
+          </thead>
+          <tbody id="adminParticipantsTable">
+            <tr><td colspan="7" style="text-align:center; color: var(--text-muted);">Waiting for active participants...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Right: Real-Time Live Trade Activity Stream -->
+      <div class="admin-panel">
+        <div class="admin-panel-title">
+          <span>⚡ Live Participant Trade Stream</span>
+        </div>
+        <div class="news-feed" id="adminTradeFeed" style="max-height: 500px; overflow-y: auto;">
+          <div class="news-card bullish">
+            <div class="news-title">System Ready - Listening for student trade execution...</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    function fetchAdminData() {
+      fetch('/api/admin/data')
+        .then(res => res.json())
+        .then(data => {
+          renderAdminDashboard(data);
+        })
+        .catch(err => console.warn('Admin fetch error:', err));
+    }
+
+    function renderAdminDashboard(data) {
+      const participants = data.participants || [];
+      const trades = data.trades || [];
+
+      // Update Top Stats
+      document.getElementById('statActiveCount').innerText = participants.length;
+      document.getElementById('statTotalTrades').innerText = trades.length;
+
+      if (participants.length > 0) {
+        const totalEq = participants.reduce((acc, p) => acc + (p.equity || 100000), 0);
+        const avgEq = totalEq / participants.length;
+        const avgRet = ((avgEq - 100000) / 1000).toFixed(2);
+
+        document.getElementById('statAvgEquity').innerText = `$${avgEq.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+        const retEl = document.getElementById('statAvgReturn');
+        retEl.innerText = `${avgRet >= 0 ? '+' : ''}${avgRet}%`;
+        retEl.className = `stat-value ${avgRet >= 0 ? 'up' : 'down'}`;
+      }
+
+      // Render Participants Leaderboard (sorted by equity descending)
+      const tbody = document.getElementById('adminParticipantsTable');
+      if (participants.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted);">No active participants connected. Open simulator in student window.</td></tr>`;
+      } else {
+        const sorted = [...participants].sort((a, b) => (b.equity || 0) - (a.equity || 0));
+        tbody.innerHTML = sorted.map(p => {
+          const retPct = parseFloat(p.returnPct || 0);
+          const pnlClass = retPct >= 0 ? 'up' : 'down';
+          return `
+            <tr>
+              <td><strong>${p.userName}</strong></td>
+              <td><span style="color:var(--blue); font-family:monospace;">${p.userID}</span></td>
+              <td>$${(p.cash || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+              <td>${p.sharesHeld || 0} shares</td>
+              <td style="font-family:'JetBrains Mono', monospace; font-weight:700;">$${(p.equity || 100000).toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+              <td class="stat-value ${pnlClass}">${retPct >= 0 ? '+' : ''}${p.returnPct}%</td>
+              <td><span style="font-size:10px; color:var(--text-muted);">${p.lastActiveStr || 'Just now'}</span></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      // Render Trade Stream
+      const feed = document.getElementById('adminTradeFeed');
+      if (trades.length === 0) {
+        feed.innerHTML = `<div class="news-card"><div class="news-title" style="color:var(--text-muted);">No trades executed yet.</div></div>`;
+      } else {
+        feed.innerHTML = trades.map(t => `
+          <div class="news-card ${t.type === 'BUY' ? 'bullish' : 'bearish'}">
+            <div>
+              <div class="news-title">
+                <strong>${t.userName}</strong> (${t.userID}) - 
+                <span style="color:${t.type === 'BUY' ? 'var(--green)' : 'var(--red)'}">${t.type} ${t.shares} shares</span> @ $${t.price.toFixed(2)}
+              </div>
+              <div class="news-meta" style="margin-top:2px;">Time: ${t.time} (${t.elapsed}) • Total: $${t.totalCost.toFixed(2)}</div>
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+
+    setInterval(fetchAdminData, 2000);
+    fetchAdminData();
+  </script>
+</body>
+</html>
